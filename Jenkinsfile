@@ -1,67 +1,58 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
+    environment {
+        NODE_ENV = 'production'
     }
 
-    //environment {
-    //    VERSION = readMavenPom().getVersion()
-    //    NAME = readMavenPom().getArtifactId()
-    //}
+    tools {
+        nodejs 'NodeJS_24'  // Make sure Jenkins has this tool name configured
+    }
 
     stages {
-    
     	stage('scm') {
     	   steps {
 	    	    checkout scm
     		}
     	}
-        
-        stage('compile') {
-	        steps {
-	       		sh 'mvn clean package -DskipTests'
-	        }        	                  
-        }
-        
-         stage('tests') {
-	        steps {
 
-           		sh 'mvn jacoco:prepare-agent test -P coverage'
-           		
-           		jacoco(
-    				execPattern: '**/target/jacoco.exec',
-    				classPattern: '**/target/classes/**',
-    				sourcePattern: '**/src/main/java/**',
-    				inclusionPattern: '**/*.class')
-	        }        	                  
-        }
-        
-    stage('SonarQube Analysis') {
-        steps {
-        withSonarQubeEnv("sonar") {
-                    sh "mvn clean verify sonar:sonar -Dsonar.projectKey=runvoteqs -Dsonar.projectName='runvoteqs'"
-                }
-        }
-    }
-        
-        stage('package') {
-            when {
-                anyOf {
-                    branch 'main'; branch 'dev'
-                }
-            }
+        stage('Install Dependencies') {
             steps {
-                script {
-                    sh '''
-						mkdir target/package/apps-repo
-						cp target/$NAME-$VERSION.jar target/package/apps-repo/$NAME.jar
-						cd target/package && zip -r ../$NAME-$VERSION.zip .
-                    '''
-                }
+                sh 'npm install'
             }
         }
-        
+
+        stage('Lint') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'npm test -- --watch=false --browsers=ChromeHeadless'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'ng build --configuration production'
+            }
+        }
+
+        stage('Archive Build Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'dist/**', fingerprint: true
+            }
+        }
     }
-    
+
+    post {
+        success {
+            echo 'Angular build completed successfully.'
+        }
+        failure {
+            echo 'Build failed. Check logs.'
+        }
+    }
 }
