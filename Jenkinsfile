@@ -19,8 +19,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh 'rm -rf node_modules package-lock.json'
-                sh 'npm install --save-dev @angular/build && npm install'
-                sh 'npm install --save-dev @angular-devkit/build-angular'
+                sh 'npm install --save @angular/build && npm install'
+                sh 'npm install --save @angular-devkit/build-angular'
 
             }
         }
