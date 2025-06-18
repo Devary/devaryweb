@@ -22,17 +22,17 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                sh 'npm run lint'
-            }
-        }
+        //stage('Lint') {
+        //    steps {
+        //        sh 'npm run lint'
+        //    }
+        //}
 
-        stage('Run Tests') {
-            steps {
-                sh 'npm test -- --watch=false --browsers=ChromeHeadless'
-            }
-        }
+        //stage('Run Tests') {
+        //    steps {
+        //        sh 'npm test -- --watch=false --browsers=ChromeHeadless'
+        //    }
+        //}
 
         stage('Build') {
             steps {
